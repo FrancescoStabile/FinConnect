@@ -205,3 +205,62 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ============================================
+# FinConnect - Project Specific
+# ============================================
+
+# Environment files (contengono secrets)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Database locale (se usi SQLite per dev)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# IDE / Editor
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentazione generata
+docs/screenshots/
+docs/diagrams/*.png
+docs/diagrams/*.svg
+!docs/diagrams/.gitkeep
+
+# Build frontend
+frontend/dist/
+frontend/build/
+frontend/node_modules/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# Jupyter (se usato per prototyping)
+.ipynb_checkpoints/
+
+# File temporanei tesi
+*.docx
+*.pdf
+!docs/*.pdf
+plan/
