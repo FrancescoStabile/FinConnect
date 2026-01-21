@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: finconnect_db
+    environment:
+      POSTGRES_USER: finconnect
+      POSTGRES_PASSWORD: finconnect_secret
+      POSTGRES_DB: finconnect
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: finconnect_backend
+    environment:
+      DATABASE_URL: postgresql://finconnect:finconnect_secret@postgres:5432/finconnect
+      SECRET_KEY: finconnect-dev-secret-key-2026
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app:Z
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
