@@ -264,3 +264,6 @@ backend/alembic/versions/*.pyc
 *.pdf
 !docs/*.pdf
 plan/
+
+# Config locali
+.github/
