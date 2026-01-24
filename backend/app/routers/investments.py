@@ -162,3 +162,194 @@ async def simulate_pac(
         projected_worst_final=Decimal(str(round(max(value_worst, 0), 2))),
         projection_data=projection_data
     )
+
+
+@router.post("/buy", response_model=schemas.BuyResponse, status_code=status.HTTP_201_CREATED)
+async def buy_investment(
+    buy_data: schemas.BuyRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Acquista quote di un prodotto di investimento.
+    
+    Logica:
+    1. Verifica che l'utente abbia saldo sufficiente
+    2. Calcola quante quote può acquistare (importo / prezzo_quota)
+    3. Sottrae l'importo dal saldo del conto
+    4. Aggiorna/crea l'holding nel portafoglio
+    """
+    # Ottieni il conto dell'utente
+    account = db.query(models.Account).filter(
+        models.Account.owner_id == current_user.id
+    ).first()
+    
+    if not account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conto non trovato"
+        )
+    
+    # Verifica saldo sufficiente
+    if account.balance < buy_data.amount:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Saldo insufficiente. Disponibile: €{account.balance}, Richiesto: €{buy_data.amount}"
+        )
+    
+    # Ottieni il prodotto
+    product = db.query(models.InvestmentProduct).filter(
+        models.InvestmentProduct.id == buy_data.product_id
+    ).first()
+    
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prodotto di investimento non trovato"
+        )
+    
+    # Calcola le quote acquistate
+    quantity = buy_data.amount / product.current_price
+    
+    # Ottieni o crea il portafoglio
+    portfolio = db.query(models.Portfolio).filter(
+        models.Portfolio.owner_id == current_user.id
+    ).first()
+    
+    if not portfolio:
+        portfolio = models.Portfolio(
+            owner_id=current_user.id,
+            name="Portafoglio Investimenti"
+        )
+        db.add(portfolio)
+        db.flush()  # Per ottenere l'ID
+    
+    # Cerca holding esistente per questo prodotto
+    holding = db.query(models.Holding).filter(
+        models.Holding.portfolio_id == portfolio.id,
+        models.Holding.product_id == product.id
+    ).first()
+    
+    if holding:
+        # Aggiorna holding esistente con media ponderata del prezzo
+        total_cost_old = holding.quantity * holding.average_buy_price
+        total_cost_new = quantity * product.current_price
+        new_quantity = holding.quantity + quantity
+        new_avg_price = (total_cost_old + total_cost_new) / new_quantity
+        
+        holding.quantity = new_quantity
+        holding.average_buy_price = new_avg_price
+    else:
+        # Crea nuovo holding
+        holding = models.Holding(
+            portfolio_id=portfolio.id,
+            product_id=product.id,
+            quantity=quantity,
+            average_buy_price=product.current_price
+        )
+        db.add(holding)
+    
+    # Sottrai l'importo dal saldo
+    account.balance -= buy_data.amount
+    
+    db.commit()
+    
+    return schemas.BuyResponse(
+        message="Acquisto completato con successo",
+        product_name=product.name,
+        quantity_purchased=round(quantity, 4),
+        amount_spent=buy_data.amount,
+        new_account_balance=account.balance
+    )
+
+
+@router.post("/sell", response_model=schemas.SellResponse, status_code=status.HTTP_200_OK)
+async def sell_investment(
+    sell_data: schemas.SellRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Vende quote di un prodotto di investimento dal portafoglio.
+    
+    Logica:
+    1. Verifica che l'utente possieda abbastanza quote
+    2. Calcola il valore al prezzo corrente
+    3. Rimuove/riduce l'holding
+    4. Accredita il valore sul conto bancario
+    """
+    # Ottieni il conto dell'utente
+    account = db.query(models.Account).filter(
+        models.Account.owner_id == current_user.id
+    ).first()
+    
+    if not account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conto non trovato"
+        )
+    
+    # Ottieni il portafoglio
+    portfolio = db.query(models.Portfolio).filter(
+        models.Portfolio.owner_id == current_user.id
+    ).first()
+    
+    if not portfolio:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Portafoglio non trovato"
+        )
+    
+    # Ottieni il prodotto
+    product = db.query(models.InvestmentProduct).filter(
+        models.InvestmentProduct.id == sell_data.product_id
+    ).first()
+    
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prodotto di investimento non trovato"
+        )
+    
+    # Cerca l'holding
+    holding = db.query(models.Holding).filter(
+        models.Holding.portfolio_id == portfolio.id,
+        models.Holding.product_id == product.id
+    ).first()
+    
+    if not holding:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Non possiedi quote di {product.name}"
+        )
+    
+    # Verifica quantità sufficiente
+    if holding.quantity < sell_data.quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Quote insufficienti. Possiedi: {holding.quantity}, Richiesto: {sell_data.quantity}"
+        )
+    
+    # Calcola il valore di vendita
+    sale_value = sell_data.quantity * product.current_price
+    
+    # Aggiorna o rimuovi l'holding
+    if holding.quantity == sell_data.quantity:
+        # Vendita totale: rimuovi l'holding
+        db.delete(holding)
+    else:
+        # Vendita parziale: riduci la quantità
+        holding.quantity -= sell_data.quantity
+    
+    # Accredita il valore sul conto
+    account.balance += sale_value
+    
+    db.commit()
+    
+    return schemas.SellResponse(
+        message="Vendita completata con successo",
+        product_name=product.name,
+        quantity_sold=sell_data.quantity,
+        amount_received=round(sale_value, 2),
+        new_account_balance=account.balance
+    )

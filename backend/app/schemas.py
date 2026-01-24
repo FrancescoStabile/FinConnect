@@ -8,8 +8,6 @@ from datetime import datetime
 from typing import List, Optional
 
 
-# ============== AUTENTICAZIONE ==============
-
 class Token(BaseModel):
     """Risposta con token JWT."""
     access_token: str
@@ -20,8 +18,6 @@ class TokenData(BaseModel):
     """Dati estratti dal token JWT."""
     username: Optional[str] = None
 
-
-# ============== UTENTE ==============
 
 class UserBase(BaseModel):
     """Campi base dell'utente."""
@@ -43,8 +39,6 @@ class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== CONTO ==============
-
 class AccountBase(BaseModel):
     """Campi base del conto."""
     account_number: str
@@ -61,8 +55,6 @@ class AccountRead(AccountBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== TRANSAZIONI ==============
-
 class TransactionBase(BaseModel):
     """Campi base della transazione."""
     amount: Decimal = Field(..., gt=0)
@@ -72,6 +64,7 @@ class TransactionBase(BaseModel):
 class TransferRequest(BaseModel):
     """Schema per richiesta bonifico."""
     receiver_account_number: str = Field(..., min_length=1)
+    receiver_name: Optional[str] = Field(None, max_length=255)
     amount: Decimal = Field(..., gt=0)
     description: Optional[str] = Field(None, max_length=255)
 
@@ -88,8 +81,6 @@ class TransactionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== PRODOTTI INVESTIMENTO ==============
-
 class InvestmentProductRead(BaseModel):
     """Schema per la lettura prodotto investimento."""
     id: int
@@ -104,8 +95,6 @@ class InvestmentProductRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== HOLDINGS ==============
-
 class HoldingRead(BaseModel):
     """Schema per la lettura posizione nel portafoglio."""
     id: int
@@ -118,8 +107,6 @@ class HoldingRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== PORTAFOGLIO ==============
-
 class PortfolioRead(BaseModel):
     """Schema per la lettura portafoglio."""
     id: int
@@ -131,7 +118,39 @@ class PortfolioRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ============== SIMULAZIONE ==============
+class BuyRequest(BaseModel):
+    """Schema per richiesta acquisto prodotto di investimento."""
+    product_id: int
+    amount: Decimal = Field(..., gt=0, description="Importo in EUR da investire")
+
+
+class BuyResponse(BaseModel):
+    """Risposta dopo acquisto riuscito."""
+    message: str
+    product_name: str
+    quantity_purchased: Decimal
+    amount_spent: Decimal
+    new_account_balance: Decimal
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SellRequest(BaseModel):
+    """Schema per richiesta vendita quote."""
+    product_id: int
+    quantity: Decimal = Field(..., gt=0, description="Numero di quote da vendere")
+
+
+class SellResponse(BaseModel):
+    """Risposta dopo vendita riuscita."""
+    message: str
+    product_name: str
+    quantity_sold: Decimal
+    amount_received: Decimal
+    new_account_balance: Decimal
+    
+    model_config = ConfigDict(from_attributes=True)
+
 
 class SimulationRequest(BaseModel):
     """Schema per richiesta simulazione PAC."""

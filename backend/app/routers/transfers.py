@@ -12,7 +12,7 @@ from app.database import get_db
 router = APIRouter(prefix="/transfers", tags=["Bonifici"])
 
 
-@router.post("/", response_model=schemas.TransactionRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=schemas.TransactionRead, status_code=status.HTTP_201_CREATED)
 async def create_transfer(
     transfer_data: schemas.TransferRequest,
     current_user: models.User = Depends(auth.get_current_user),
