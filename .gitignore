@@ -232,8 +232,6 @@ logs/
 Thumbs.db
 
 # Documentazione
-docs/diagrams/*.png
-docs/diagrams/*.svg
 !docs/diagrams/.gitkeep
 
 # Build frontend
