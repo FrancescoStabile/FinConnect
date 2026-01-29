@@ -156,7 +156,7 @@ Per eseguire l'applicazione in ambiente locale sono necessari:
 ### 1. Clone del Repository
 
 ```bash
-git clone https://github.com/FrancescoStabile/FinConnect.git
+git clone https://github.com/FrancescoStabile/FinConnect
 cd FinConnect
 ```
 
@@ -256,13 +256,8 @@ FinConnect/
 │   └── vite.config.js
 │
 ├── docs/                       # Documentazione tecnica
-│   ├── diagrams/              # Diagrammi UML (PlantUML, Draw.io)
-│   └── screenshots/           # Screenshot per la tesi
-│
-├── plan/                       # Documentazione di progetto
-│   ├── Progettazione.md       # Documento di design
-│   ├── PIANO_SVILUPPO.md      # Timeline e task
-│   └── TemaTesi.md            # Requisiti tesi
+│   ├── diagrams/              # Diagrammi
+│   └── screenshots/           # Screenshot UI
 │
 ├── docker-compose.yml          # Orchestrazione container
 ├── .env.example                # Template variabili d'ambiente
