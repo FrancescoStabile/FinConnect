@@ -17,8 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia il codice dell'applicazione
 COPY . .
 
+# Rende eseguibile lo script di avvio
+RUN chmod +x entrypoint.sh
+
 # Espone la porta
 EXPOSE 8000
 
-# Comando di avvio
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando di avvio (migrazioni + seed + server)
+ENTRYPOINT ["./entrypoint.sh"]

@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import TransferPage from './pages/TransferPage';
 import InvestmentsPage from './pages/InvestmentsPage';
 import SimulationPage from './pages/SimulationPage';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 function App() {
@@ -51,7 +52,7 @@ function App() {
               }
             />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Layout>
       </BrowserRouter>

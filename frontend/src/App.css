@@ -1006,3 +1006,31 @@ body {
     font-size: 1.5rem;
   }
 }
+
+/* Not Found Page */
+.not-found-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.not-found-content h1 {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.not-found-content h2 {
+  font-size: 1.5rem;
+  color: var(--gray-700);
+  margin-bottom: 1rem;
+}
+
+.not-found-content p {
+  color: var(--gray-500);
+  margin-bottom: 2rem;
+}

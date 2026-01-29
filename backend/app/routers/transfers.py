@@ -35,7 +35,6 @@ async def create_transfer(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Nessun conto associato a questo utente"
         )
-    
     # 2. Ottieni il conto del destinatario
     receiver_account = db.query(models.Account).filter(
         models.Account.account_number == transfer_data.receiver_account_number
@@ -46,14 +45,12 @@ async def create_transfer(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conto destinatario non trovato"
         )
-    
     # 3. Verifica che non sia un bonifico verso se stessi
     if sender_account.id == receiver_account.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Non puoi effettuare un bonifico verso il tuo stesso conto"
         )
-    
     # 4. Verifica fondi sufficienti
     if sender_account.balance < transfer_data.amount:
         raise HTTPException(
@@ -72,9 +69,7 @@ async def create_transfer(
         sender_account_id=sender_account.id,
         receiver_account_id=receiver_account.id
     )
-    
     db.add(transaction)
     db.commit()
     db.refresh(transaction)
-    
     return transaction
